@@ -25,7 +25,7 @@ namespace TestTaskApi.Tests
 
         public async void TestBalance()
         {
-            for (int i = _a; i < _b; i++)
+            for (int i = _a; i <= _b; i++)
             {
                 await _controller.BalanceOperation(i, new Operation
                 {

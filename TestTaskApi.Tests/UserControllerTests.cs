@@ -30,6 +30,63 @@ namespace TestTaskApi.Tests
         }
 
         [Fact]
+        public async Task BalanceOperation_TestWith10Threads()
+        {
+            // Arrange
+            var context = _provider.GetService<UserContext>();
+
+            int usersCount = 50;
+            int threadsCount = 10;
+
+            for (int i = 0; i < usersCount; i++)
+            {
+                context.Add(new User
+                {
+                    Name = "Name" + i,
+                    Surname = "Surname" + i,
+                    BirthDate = new DateTime(1999, 09, 09)
+                });
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new UsersController(context);
+
+            List<TestingThread> threads = new List<TestingThread>();
+
+            // Amount of users for every threads
+            int perThread = usersCount / threadsCount;
+
+            // Dividing users for threads
+            int a = 1;
+            int b = a + perThread;
+            threads.Add(new TestingThread(controller, a, b));
+            while (b + perThread < usersCount)
+            {
+                a = b + 1;
+                b = a + perThread;
+                threads.Add(new TestingThread(controller, a, b));
+            }
+            a = b + 1;
+            threads.Add(new TestingThread(controller, a, usersCount));
+
+            // Act 
+            foreach (var thread in threads)
+            {
+                await Task.Factory.StartNew(() =>
+                     thread.TestBalance());
+            }
+
+            // Assert 
+            var result = await controller.GetUsers();
+            var users = Assert.IsType<List<User>>(result.Value);
+
+            foreach (var user in users)
+            {
+                Assert.Equal(25M, user.Balance);
+            }
+        }
+
+        [Fact]
         public async Task GetUsers_DbHas2Users_Returns2Users()
         {
             // Arrange
