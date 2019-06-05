@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,15 +14,26 @@ namespace TestTaskApi.Tests
 {
     public class UserControllerTests
     {
+        private ServiceProvider _provider;
+
+        public UserControllerTests()
+        {
+            var services = new ServiceCollection();
+
+            services.AddDbContext<UserContext>(
+                options =>
+                    options.UseInMemoryDatabase($"db-{Guid.NewGuid()}"),
+                ServiceLifetime.Transient
+                );
+
+            _provider = services.BuildServiceProvider();
+        }
+
         [Fact]
         public async Task GetUsers_DbHas2Users_Returns2Users()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_GetUsers")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -54,11 +66,7 @@ namespace TestTaskApi.Tests
         public async Task GetUser_GoodId_ReturnsUser()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_GetUser")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -87,11 +95,7 @@ namespace TestTaskApi.Tests
         public async Task GetUser_WrongId_ReturnsNotFound()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_GetUser_WrongId")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -117,11 +121,7 @@ namespace TestTaskApi.Tests
         public async Task RegisterUser_GoodUser_ReturnsCreatedAtActionResult()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_RegisterUser")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             var controller = new UsersController(context);
 
@@ -155,11 +155,7 @@ namespace TestTaskApi.Tests
         public async Task RegisterUser_UserNotNullId_ReturnsBadRequest()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_RegisterUser_UserWithId")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             var controller = new UsersController(context);
 
@@ -186,11 +182,7 @@ namespace TestTaskApi.Tests
         public void RegisterUser_NotValidUser_ModelStateIsValidFalse()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_RegisterUser_UserNotValid")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             var controller = new UsersController(context);                   
 
@@ -207,11 +199,7 @@ namespace TestTaskApi.Tests
         public async Task DeleteUser_GoodId_ReturnsNoContent()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_DeleteUser")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -251,11 +239,7 @@ namespace TestTaskApi.Tests
         public async Task DeleteUser_GoodId_ReturnsNotFound()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_DeleteUser_NotFound")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -295,11 +279,7 @@ namespace TestTaskApi.Tests
         public async Task BalanceOperation_WrongId_ReturnsNotFound()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_BalanceOperation_NotFound")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -332,11 +312,7 @@ namespace TestTaskApi.Tests
         public async Task BalanceOperation_GoodIdAdd_ReturnsUser()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_BalanceOperation_GoodId")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -370,11 +346,7 @@ namespace TestTaskApi.Tests
         public async Task BalanceOperation_GoodWithdraw_ReturnsUser()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_BalanceOperation_GoodWithdraw")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
@@ -415,11 +387,7 @@ namespace TestTaskApi.Tests
         public async Task BalanceOperation_BadWithdraw_ReturnsBadRequest()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<UserContext>()
-                .UseInMemoryDatabase(databaseName: "Test_BalanceOperation_BadWithdraw")
-                .Options;
-
-            var context = new UserContext(options);
+            var context = _provider.GetService<UserContext>();
 
             context.Users.Add(new User
             {
